@@ -1,9 +1,10 @@
+import { ArrowUpDown } from 'lucide-react'
 import { useMemo, useState } from 'react'
 
 const statusStyles = {
-  approved: 'bg-emerald-50 text-emerald-600',
-  pending: 'bg-amber-50 text-amber-600',
-  rejected: 'bg-rose-50 text-rose-600',
+  approved: 'bg-emerald-500/15 text-emerald-200',
+  pending: 'bg-amber-500/15 text-amber-200',
+  rejected: 'bg-rose-500/15 text-rose-200',
 }
 
 const Table = ({ columns, data, initialSort }) => {
@@ -50,9 +51,9 @@ const Table = ({ columns, data, initialSort }) => {
   }
 
   return (
-    <div className="overflow-x-auto rounded-2xl border border-slate-200/70 bg-white shadow-sm shadow-slate-100">
+    <div className="overflow-x-auto rounded-2xl border border-white/10 bg-black/50 shadow-sm shadow-black/40">
       <table className="min-w-full text-left text-sm">
-        <thead className="bg-slate-50 text-xs uppercase tracking-wider text-slate-400">
+        <thead className="bg-white/5 text-xs uppercase tracking-wider text-white/50">
           <tr>
             {columns.map((column) => (
               <th key={column.key} className="px-4 py-3">
@@ -60,32 +61,26 @@ const Table = ({ columns, data, initialSort }) => {
                   type="button"
                   onClick={() => column.sortable && handleSort(column.key)}
                   className={`flex items-center gap-2 ${
-                    column.sortable ? 'cursor-pointer text-slate-600' : 'text-slate-400'
+                    column.sortable ? 'cursor-pointer text-white/70' : 'text-white/40'
                   }`}
                 >
                   <span>{column.label}</span>
                   {column.sortable && (
-                    <svg
-                      viewBox="0 0 24 24"
+                    <ArrowUpDown
                       className={`h-3.5 w-3.5 ${
-                        sortConfig?.key === column.key ? 'text-indigo-600' : 'text-slate-300'
+                        sortConfig?.key === column.key ? 'text-[#01F27B]' : 'text-white/25'
                       }`}
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.8"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M7 15l5 5 5-5" />
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M7 9l5-5 5 5" />
-                    </svg>
+                      strokeWidth={1.8}
+                    />
                   )}
                 </button>
               </th>
             ))}
           </tr>
         </thead>
-        <tbody className="divide-y divide-slate-100">
+        <tbody className="divide-y divide-white/10">
           {sortedData.map((row) => (
-            <tr key={row.id} className="text-slate-700">
+            <tr key={row.id} className="text-white/80">
               {columns.map((column) => (
                 <td key={column.key} className="px-4 py-4">
                   {column.render
@@ -94,7 +89,7 @@ const Table = ({ columns, data, initialSort }) => {
                       ? (
                           <span
                             className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                              statusStyles[row[column.key]] || 'bg-slate-100 text-slate-500'
+                              statusStyles[row[column.key]] || 'bg-white/10 text-white/50'
                             }`}
                           >
                             {row[column.key]}
