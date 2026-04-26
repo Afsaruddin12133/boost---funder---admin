@@ -5,13 +5,13 @@ import Analytics from "./pages/Analytics";
 import Dashboard from "./pages/Dashboard";
 import Deals from "./pages/Deals";
 import FeaturedDeals from "./pages/FeaturedDeals";
-import Founders from "./pages/Founders";
-import Investors from "./pages/Investors";
+
 import Login from "./pages/Login";
 import Notifications from "./pages/Notifications";
 import Settings from "./pages/Settings";
 import Subscriptions from "./pages/Subscriptions";
 import Users from "./pages/Users";
+import UserPlans from "./pages/UserPlans";
 import Verification from "./pages/Verification";
 // import { signInWithPopup, GoogleAuthProvider,FacebookAuthProvider } from "firebase/auth";
 
@@ -19,41 +19,28 @@ import Verification from "./pages/Verification";
 
 
 function App() {
-  // const login = async () => {
-  //   const provider = new GoogleAuthProvider();
+//   const login = async () => {
+//     const provider = new GoogleAuthProvider();
 
-  //   const result = await signInWithPopup(auth, provider);
+//     const result = await signInWithPopup(auth, provider);
 
-  //   const token = await result.user.getIdToken();
-  //   console.log(token);
-  // };
+//     const token = await result.user.getIdToken();
+//     console.log(token);
+//   };
 
-  // const loginWithFacebook = async () => {
-  //   try {
-  //     const provider = new FacebookAuthProvider();
+//   const loginWithFacebook = async () => {
+//     try {
+//       const provider = new FacebookAuthProvider();
 
-  //     const result = await signInWithPopup(auth, provider);
+//       const result = await signInWithPopup(auth, provider);
 
-  //     const token = await result.user.getIdToken();
-  //     console.log("FACEBOOK TOKEN:", token);
-  //   } catch (error) {
-  //     console.error("Facebook Login Error:", error.message);
-  //   }
-  // };
-  // <div>
-  //       <button
-  //         onClick={login}
-  //         className="bg-green-600 border text-white p-8 cursor-pointer"
-  //       >
-  //         GoogleLogin
-  //       </button>
-  //       <button
-  //         onClick={loginWithFacebook}
-  //         className="bg-blue-600 border text-white p-8 cursor-pointer"
-  //       >
-  //         Facebook Login
-  //       </button>
-  //     </div>
+//       const token = await result.user.getIdToken();
+//       console.log("FACEBOOK TOKEN:", token);
+//     } catch (error) {
+//       console.error("Facebook Login Error:", error.message);
+//     }
+//   };
+
 
   return (
     <>
@@ -67,6 +54,7 @@ function App() {
           },
         }}
       />
+      
       <Routes>
         <Route path="/" element={<Login />} />
         <Route
@@ -86,21 +74,14 @@ function App() {
           }
         />
         <Route
-          path="/founders"
+          path="/user-plans"
           element={
             <AdminLayout>
-              <Founders />
+              <UserPlans />
             </AdminLayout>
           }
         />
-        <Route
-          path="/investors"
-          element={
-            <AdminLayout>
-              <Investors />
-            </AdminLayout>
-          }
-        />
+
         <Route
           path="/deals"
           element={
@@ -159,6 +140,21 @@ function App() {
         />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+
+        {/* <div>
+        <button
+          onClick={login}
+          className="bg-green-600 border text-white p-8 cursor-pointer"
+        >
+          GoogleLogin
+        </button>
+        <button
+          onClick={loginWithFacebook}
+          className="bg-blue-600 border text-white p-8 cursor-pointer"
+        >
+          Facebook Login
+        </button>
+      </div> */}
     </>
   );
 }

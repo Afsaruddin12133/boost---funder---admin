@@ -1,15 +1,14 @@
 import {
   Bell,
   Briefcase,
+  ClipboardList,
   CreditCard,
   LayoutDashboard,
   LineChart,
   Settings,
   ShieldCheck,
   Star,
-  UserRound,
   Users,
-  Users2,
 } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useLocation } from 'react-router-dom'
@@ -64,14 +63,9 @@ const navItems = [
   },
   { label: 'Users', path: '/users', icon: <Users className="h-5 w-5" strokeWidth={1.8} /> },
   {
-    label: 'Founders',
-    path: '/founders',
-    icon: <UserRound className="h-5 w-5" strokeWidth={1.8} />,
-  },
-  {
-    label: 'Investors',
-    path: '/investors',
-    icon: <Users2 className="h-5 w-5" strokeWidth={1.8} />,
+    label: 'User Plans',
+    path: '/user-plans',
+    icon: <ClipboardList className="h-5 w-5" strokeWidth={1.8} />,
   },
   { label: 'Deals', path: '/deals', icon: <Briefcase className="h-5 w-5" strokeWidth={1.8} /> },
   {
