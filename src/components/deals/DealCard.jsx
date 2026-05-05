@@ -1,5 +1,6 @@
 import { BadgeCheck, Calendar, Clock, MapPin, TrendingUp } from 'lucide-react'
 import { formatCurrency, formatDate, isNewDeal } from '../../lib/utils'
+import { glassCardClass } from '../BoostFundrUI'
 import ActionButtons from './ActionButtons'
 import StatusBadge from './StatusBadge'
 
@@ -10,7 +11,7 @@ const DealCard = ({ deal, onApprove, onReject, onView, onFeature, actionState })
   const mediaUrl = deal.media?.[0]
 
   return (
-    <div className="group flex h-full flex-col overflow-hidden rounded-3xl border border-white/10 bg-black/50 shadow-lg shadow-black/40 transition hover:-translate-y-1 hover:border-white/20">
+    <div className={`${glassCardClass} group flex h-full flex-col overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:border-white/20 hover:scale-[1.02]`}>
       <div className="relative">
         <img
           src={mediaUrl || 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=900&auto=format&fit=crop'}
@@ -19,7 +20,7 @@ const DealCard = ({ deal, onApprove, onReject, onView, onFeature, actionState })
         />
         <div className="absolute right-4 top-4 flex items-center gap-2">
           {createdLabel ? (
-            <span className="rounded-full bg-[#01F27B] px-3 py-1 text-xs font-semibold text-black">New</span>
+            <span className="rounded-md bg-[#01F27B] px-3 py-1 text-xs font-semibold text-black shadow-[0_0_20px_rgba(1,242,123,0.3)]">New</span>
           ) : null}
           <StatusBadge status={deal.status} />
         </div>
@@ -30,7 +31,7 @@ const DealCard = ({ deal, onApprove, onReject, onView, onFeature, actionState })
           <div className="flex items-center gap-2">
             <h3 className="text-lg font-semibold text-white">{deal.startupName}</h3>
             {deal.verificationBadge?.isVerified ? (
-              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/20 px-2 py-0.5 text-xs font-semibold text-emerald-200">
+              <span className="inline-flex items-center gap-1 rounded-md bg-[#01F27B]/10 px-2 py-0.5 text-xs font-semibold text-[#01F27B]">
                 <BadgeCheck className="h-3.5 w-3.5" strokeWidth={1.8} />
                 Verified
               </span>
@@ -38,15 +39,15 @@ const DealCard = ({ deal, onApprove, onReject, onView, onFeature, actionState })
           </div>
           <p className="text-sm text-white/70 line-clamp-2">{deal.shortPitch}</p>
           <div className="flex flex-wrap items-center gap-2 text-xs text-white/70">
-            <span className="rounded-full border border-white/10 px-2 py-1">{deal.category}</span>
-            <span className="rounded-full border border-white/10 px-2 py-1">{deal.stage}</span>
+            <span className="rounded-md border border-white/10 bg-white/5 px-2 py-1">{deal.category}</span>
+            <span className="rounded-md border border-white/10 bg-white/5 px-2 py-1">{deal.stage}</span>
             {deal.location ? (
-              <span className="inline-flex items-center gap-1 rounded-full border border-white/10 px-2 py-1">
+              <span className="inline-flex items-center gap-1 rounded-md border border-white/10 bg-white/5 px-2 py-1">
                 <MapPin className="h-3.5 w-3.5" strokeWidth={1.8} />
                 {deal.location}
               </span>
             ) : (
-              <span className="rounded-full border border-rose-500/40 px-2 py-1 text-rose-200">
+              <span className="rounded-md border border-white/10 bg-white/5 px-2 py-1 text-white/60">
                 Missing location
               </span>
             )}

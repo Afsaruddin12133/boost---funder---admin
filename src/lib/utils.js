@@ -1,9 +1,9 @@
 export const statusStyles = {
-  draft: 'bg-slate-800 text-white',
-  pendingReview: 'bg-slate-800 text-white',
-  approved: 'bg-emerald-500/20 text-emerald-200',
-  rejected: 'bg-rose-500/20 text-rose-200',
-  complete: 'bg-black text-white',
+  draft: 'bg-white/10 text-white/70',
+  pendingReview: 'bg-[#01F27B]/10 text-[#01F27B]',
+  approved: 'bg-[#01F27B]/10 text-[#01F27B]',
+  rejected: 'bg-white/10 text-white/60',
+  complete: 'bg-[#01F27B]/10 text-[#01F27B]',
 }
 
 export const formatCurrency = (amount, currency = 'USD') => {

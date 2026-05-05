@@ -1,7 +1,8 @@
-import { X, Mail, Phone, MapPin, Globe, Twitter, Linkedin, Facebook, Github } from 'lucide-react'
+import { Facebook, Github, Globe, Linkedin, Mail, MapPin, Phone, Twitter, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { getToken } from '../../lib/utils'
 import apiClient from '../../services/apiClient'
-import { getToken, formatDate } from '../../lib/utils'
+import { glassCardClass, outlineButtonClass, statusBadgeClass } from '../BoostFundrUI'
 
 const UserDetailsModal = ({ userId, onClose }) => {
   const [user, setUser] = useState(null)
@@ -30,11 +31,11 @@ const UserDetailsModal = ({ userId, onClose }) => {
   if (!userId) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-      <div className="relative w-full max-w-2xl overflow-hidden rounded-3xl border border-white/10 bg-[#0c0c0c] shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-xl">
+      <div className={`relative w-full max-w-2xl overflow-hidden ${glassCardClass} shadow-2xl`}>
         <button 
           onClick={onClose}
-          className="absolute right-4 top-4 z-10 rounded-full bg-black/50 p-2 text-white/50 transition hover:bg-white/10 hover:text-white"
+          className="absolute right-4 top-4 z-10 rounded-full border border-white/10 bg-white/5 p-2 text-white/50 transition-all duration-300 hover:border-[#01F27B]/40 hover:text-white"
         >
           <X className="h-5 w-5" />
         </button>
@@ -46,7 +47,7 @@ const UserDetailsModal = ({ userId, onClose }) => {
         ) : user ? (
           <div className="max-h-[85vh] overflow-y-auto p-8">
             {/* Header / Basic Info */}
-            <div className="flex flex-col items-center text-center sm:flex-row sm:text-left gap-6 border-b border-white/10 pb-8">
+            <div className="flex flex-col items-center gap-6 border-b border-white/10 pb-8 text-center sm:flex-row sm:text-left">
               <img 
                 src={user.founderProfile?.profileImage || `https://ui-avatars.com/api/?name=${user.firstName}+${user.lastName}&background=random`} 
                 alt={`${user.firstName} ${user.lastName}`}
@@ -56,7 +57,7 @@ const UserDetailsModal = ({ userId, onClose }) => {
                 <div className="flex items-center justify-center sm:justify-start gap-3">
                   <h2 className="text-2xl font-bold text-white">{user.firstName} {user.lastName}</h2>
                   {user.isVerified && (
-                    <span className="rounded-full bg-emerald-500/20 px-2 py-0.5 text-xs font-bold text-emerald-400">Verified</span>
+                    <span className={statusBadgeClass}>Verified</span>
                   )}
                 </div>
                 <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4 text-sm text-white/60">
@@ -77,30 +78,30 @@ const UserDetailsModal = ({ userId, onClose }) => {
                 <div className="space-y-4">
                   <h3 className="text-sm font-semibold uppercase tracking-wider text-white/40">Founder Profile</h3>
                   <div className="grid gap-4 sm:grid-cols-2">
-                    <div className="rounded-xl bg-white/5 p-4">
+                    <div className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-xl">
                       <p className="text-xs text-white/40">Company Name</p>
                       <p className="font-semibold text-white">{user.founderProfile.companyName || '--'}</p>
                     </div>
-                    <div className="rounded-xl bg-white/5 p-4">
+                    <div className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-xl">
                       <p className="text-xs text-white/40">Startup Stage</p>
                       <p className="font-semibold text-white">{user.founderProfile.startupStage || '--'}</p>
                     </div>
-                    <div className="rounded-xl bg-white/5 p-4 sm:col-span-2">
+                    <div className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-xl sm:col-span-2">
                       <p className="text-xs text-white/40">Description</p>
                       <p className="text-white/80">{user.founderProfile.startupDescription || '--'}</p>
                     </div>
-                    <div className="rounded-xl bg-white/5 p-4 sm:col-span-2">
+                    <div className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-xl sm:col-span-2">
                       <p className="text-xs text-white/40">Bio</p>
                       <p className="text-white/80">{user.founderProfile.bio || '--'}</p>
                     </div>
-                    <div className="flex items-center gap-2 rounded-xl bg-white/5 p-4">
+                    <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-xl">
                       <MapPin className="h-5 w-5 text-white/40" />
                       <div>
                         <p className="text-xs text-white/40">Location</p>
                         <p className="text-white">{user.founderProfile.location || '--'}</p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 rounded-xl bg-white/5 p-4">
+                    <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-xl">
                       <Globe className="h-5 w-5 text-white/40" />
                       <div>
                         <p className="text-xs text-white/40">Website</p>
@@ -114,17 +115,17 @@ const UserDetailsModal = ({ userId, onClose }) => {
                   {user.founderProfile.socialLinks && (
                     <div className="mt-4 flex gap-3">
                       {user.founderProfile.socialLinks.linkedin && (
-                        <a href={user.founderProfile.socialLinks.linkedin} target="_blank" rel="noreferrer" className="rounded-lg bg-white/10 p-2 text-white/60 transition hover:bg-white/20 hover:text-white">
+                        <a href={user.founderProfile.socialLinks.linkedin} target="_blank" rel="noreferrer" className="rounded-lg border border-white/10 bg-white/5 p-2 text-white/60 transition-all duration-300 hover:border-[#01F27B]/40 hover:text-white">
                           <Linkedin className="h-5 w-5" />
                         </a>
                       )}
                       {user.founderProfile.socialLinks.twitter && (
-                        <a href={user.founderProfile.socialLinks.twitter} target="_blank" rel="noreferrer" className="rounded-lg bg-white/10 p-2 text-white/60 transition hover:bg-white/20 hover:text-white">
+                        <a href={user.founderProfile.socialLinks.twitter} target="_blank" rel="noreferrer" className="rounded-lg border border-white/10 bg-white/5 p-2 text-white/60 transition-all duration-300 hover:border-[#01F27B]/40 hover:text-white">
                           <Twitter className="h-5 w-5" />
                         </a>
                       )}
                       {user.founderProfile.socialLinks.facebook && (
-                        <a href={user.founderProfile.socialLinks.facebook} target="_blank" rel="noreferrer" className="rounded-lg bg-white/10 p-2 text-white/60 transition hover:bg-white/20 hover:text-white">
+                        <a href={user.founderProfile.socialLinks.facebook} target="_blank" rel="noreferrer" className="rounded-lg border border-white/10 bg-white/5 p-2 text-white/60 transition-all duration-300 hover:border-[#01F27B]/40 hover:text-white">
                           <Facebook className="h-5 w-5" />
                         </a>
                       )}
@@ -137,17 +138,17 @@ const UserDetailsModal = ({ userId, onClose }) => {
                 <div className="space-y-4">
                   <h3 className="text-sm font-semibold uppercase tracking-wider text-white/40">Investor Profile</h3>
                   <div className="grid gap-4 sm:grid-cols-2">
-                    <div className="rounded-xl bg-white/5 p-4 sm:col-span-2">
+                    <div className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-xl sm:col-span-2">
                       <p className="text-xs text-white/40">Bio</p>
                       <p className="text-white/80">{user.investorProfile.bio || '--'}</p>
                     </div>
 
-                    <div className="rounded-xl bg-white/5 p-4">
+                    <div className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-xl">
                       <p className="text-xs text-white/40 mb-2">Interests</p>
                       <div className="flex flex-wrap gap-2">
                         {user.investorProfile.interests?.filter(Boolean).length > 0 ? (
                           user.investorProfile.interests.filter(Boolean).map((interest, i) => (
-                            <span key={i} className="rounded-full bg-white/10 px-2.5 py-0.5 text-xs text-white/80 capitalize">
+                            <span key={i} className="rounded-md bg-white/10 px-2.5 py-0.5 text-xs text-white/80 capitalize">
                               {interest}
                             </span>
                           ))
@@ -157,12 +158,12 @@ const UserDetailsModal = ({ userId, onClose }) => {
                       </div>
                     </div>
 
-                    <div className="rounded-xl bg-white/5 p-4">
+                    <div className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-xl">
                       <p className="text-xs text-white/40 mb-2">Investment Sectors</p>
                       <div className="flex flex-wrap gap-2">
                         {user.investorProfile.investmentPreferences?.sectors?.filter(Boolean).length > 0 ? (
                           user.investorProfile.investmentPreferences.sectors.filter(Boolean).map((sector, i) => (
-                            <span key={i} className="rounded-full bg-[#01F27B]/10 border border-[#01F27B]/20 px-2.5 py-0.5 text-xs text-[#01F27B] capitalize">
+                            <span key={i} className={statusBadgeClass}>
                               {sector}
                             </span>
                           ))
@@ -172,7 +173,7 @@ const UserDetailsModal = ({ userId, onClose }) => {
                       </div>
                     </div>
 
-                    <div className="rounded-xl bg-white/5 p-4">
+                    <div className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-xl">
                       <p className="text-xs text-white/40">Max Investment</p>
                       <p className="font-semibold text-white">
                         {user.investorProfile.investmentPreferences?.maxInvestment 
@@ -181,7 +182,7 @@ const UserDetailsModal = ({ userId, onClose }) => {
                       </p>
                     </div>
 
-                    <div className="flex items-center gap-2 rounded-xl bg-white/5 p-4">
+                    <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-xl">
                       <Phone className="h-5 w-5 text-white/40" />
                       <div>
                         <p className="text-xs text-white/40">Phone</p>
@@ -193,22 +194,22 @@ const UserDetailsModal = ({ userId, onClose }) => {
                   {user.investorProfile.socialLinks && (
                     <div className="mt-4 flex gap-3">
                       {user.investorProfile.socialLinks.linkedin && (
-                        <a href={user.investorProfile.socialLinks.linkedin} target="_blank" rel="noreferrer" className="rounded-lg bg-white/10 p-2 text-white/60 transition hover:bg-white/20 hover:text-white">
+                        <a href={user.investorProfile.socialLinks.linkedin} target="_blank" rel="noreferrer" className="rounded-lg border border-white/10 bg-white/5 p-2 text-white/60 transition-all duration-300 hover:border-[#01F27B]/40 hover:text-white">
                           <Linkedin className="h-5 w-5" />
                         </a>
                       )}
                       {user.investorProfile.socialLinks.twitter && (
-                        <a href={user.investorProfile.socialLinks.twitter} target="_blank" rel="noreferrer" className="rounded-lg bg-white/10 p-2 text-white/60 transition hover:bg-white/20 hover:text-white">
+                        <a href={user.investorProfile.socialLinks.twitter} target="_blank" rel="noreferrer" className="rounded-lg border border-white/10 bg-white/5 p-2 text-white/60 transition-all duration-300 hover:border-[#01F27B]/40 hover:text-white">
                           <Twitter className="h-5 w-5" />
                         </a>
                       )}
                       {user.investorProfile.socialLinks.facebook && (
-                        <a href={user.investorProfile.socialLinks.facebook} target="_blank" rel="noreferrer" className="rounded-lg bg-white/10 p-2 text-white/60 transition hover:bg-white/20 hover:text-white">
+                        <a href={user.investorProfile.socialLinks.facebook} target="_blank" rel="noreferrer" className="rounded-lg border border-white/10 bg-white/5 p-2 text-white/60 transition-all duration-300 hover:border-[#01F27B]/40 hover:text-white">
                           <Facebook className="h-5 w-5" />
                         </a>
                       )}
                       {user.investorProfile.socialLinks.github && (
-                        <a href={user.investorProfile.socialLinks.github} target="_blank" rel="noreferrer" className="rounded-lg bg-white/10 p-2 text-white/60 transition hover:bg-white/20 hover:text-white">
+                        <a href={user.investorProfile.socialLinks.github} target="_blank" rel="noreferrer" className="rounded-lg border border-white/10 bg-white/5 p-2 text-white/60 transition-all duration-300 hover:border-[#01F27B]/40 hover:text-white">
                           <Github className="h-5 w-5" />
                         </a>
                       )}
@@ -221,7 +222,7 @@ const UserDetailsModal = ({ userId, onClose }) => {
             <div className="mt-8 flex justify-end">
               <button 
                 onClick={onClose}
-                className="rounded-xl border border-white/20 bg-transparent px-6 py-2 text-sm font-semibold text-white transition hover:bg-white/5"
+                className={`${outlineButtonClass} px-6 py-2`}
               >
                 Close
               </button>

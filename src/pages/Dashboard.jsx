@@ -1,4 +1,5 @@
 import { ArrowRight, Briefcase, CircleDollarSign, UserRound, Users } from 'lucide-react'
+import { PageHeader, SectionTitle, glassCardClass, outlineButtonClass, primaryButtonClass } from '../components/BoostFundrUI'
 import StatCard from '../components/StatCard'
 import Table from '../components/Table'
 
@@ -91,27 +92,19 @@ const quickActions = [
 const Dashboard = () => {
   return (
     <div className="space-y-8">
-      <section className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-white/50">
-            Dashboard Overview
-          </p>
-          <h1 className="mt-2 text-3xl font-semibold text-white">
-            Investment Platform Admin
-          </h1>
-          <p className="mt-2 text-sm text-white/60">
-            Monitor investors, founders, and funding activity in real time.
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <button className="rounded-2xl border border-white/10 bg-black/50 px-4 py-2 text-sm font-semibold text-white/70 transition hover:border-white/30 hover:text-white">
+      <PageHeader
+        eyebrow="Dashboard Overview"
+        title="Investment Platform Admin"
+        description="Monitor investors, founders, and funding activity in real time."
+        actions={[
+          <button key="export" className={outlineButtonClass} type="button">
             Export
-          </button>
-          <button className="rounded-2xl bg-[#01F27B] px-4 py-2 text-sm font-semibold text-black shadow-lg shadow-black/50 transition hover:brightness-110">
+          </button>,
+          <button key="new-deal" className={primaryButtonClass} type="button">
             New Deal
-          </button>
-        </div>
-      </section>
+          </button>,
+        ]}
+      />
 
       <section className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
         {stats.map((stat) => (
@@ -121,20 +114,20 @@ const Dashboard = () => {
 
       <section className="grid gap-6 lg:grid-cols-[2fr_1fr]">
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-white">Recent Activity</h2>
-            <button className="text-sm font-semibold text-[#01F27B]">View all</button>
-          </div>
+          <SectionTitle
+            title="Recent Activity"
+            action={<button className="text-sm font-semibold text-[#01F27B]">View all</button>}
+          />
           <Table columns={columns} data={activityRows} initialSort={{ key: 'date', direction: 'desc' }} />
         </div>
 
         <div className="space-y-4">
-          <h2 className="text-lg font-semibold text-white">Quick Actions</h2>
+          <SectionTitle title="Quick Actions" />
           <div className="space-y-4">
             {quickActions.map((item) => (
               <div
                 key={item.title}
-                className="rounded-2xl border border-white/10 bg-black/50 p-5 shadow-sm shadow-black/40"
+                className={`${glassCardClass} p-5`}
               >
                 <p className="text-sm font-semibold text-white">{item.title}</p>
                 <p className="mt-2 text-sm text-white/60">{item.description}</p>

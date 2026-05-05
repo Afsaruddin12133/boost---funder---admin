@@ -10,36 +10,15 @@ import Login from "./pages/Login";
 import Notifications from "./pages/Notifications";
 import Settings from "./pages/Settings";
 import Subscriptions from "./pages/Subscriptions";
-import Users from "./pages/Users";
 import UserPlans from "./pages/UserPlans";
+import Users from "./pages/Users";
 import Verification from "./pages/Verification";
-// import { signInWithPopup, GoogleAuthProvider,FacebookAuthProvider } from "firebase/auth";
+import VerificationReview from "./pages/VerificationReview";
 
-// import { auth } from "./firebase";
 
 
 function App() {
-//   const login = async () => {
-//     const provider = new GoogleAuthProvider();
 
-//     const result = await signInWithPopup(auth, provider);
-
-//     const token = await result.user.getIdToken();
-//     console.log(token);
-//   };
-
-//   const loginWithFacebook = async () => {
-//     try {
-//       const provider = new FacebookAuthProvider();
-
-//       const result = await signInWithPopup(auth, provider);
-
-//       const token = await result.user.getIdToken();
-//       console.log("FACEBOOK TOKEN:", token);
-//     } catch (error) {
-//       console.error("Facebook Login Error:", error.message);
-//     }
-//   };
 
 
   return (
@@ -48,9 +27,9 @@ function App() {
         position="top-right"
         toastOptions={{
           style: {
-            background: "#0b1b0f",
+            background: "#0b120e",
             color: "#f8fafc",
-            border: "1px solid rgba(255, 255, 255, 0.12)",
+            border: "1px solid rgba(255, 255, 255, 0.1)",
           },
         }}
       />
@@ -99,6 +78,14 @@ function App() {
           }
         />
         <Route
+          path="/verification/:id"
+          element={
+            <AdminLayout>
+              <VerificationReview />
+            </AdminLayout>
+          }
+        />
+        <Route
           path="/subscriptions"
           element={
             <AdminLayout>
@@ -140,21 +127,6 @@ function App() {
         />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-
-        {/* <div>
-        <button
-          onClick={login}
-          className="bg-green-600 border text-white p-8 cursor-pointer"
-        >
-          GoogleLogin
-        </button>
-        <button
-          onClick={loginWithFacebook}
-          className="bg-blue-600 border text-white p-8 cursor-pointer"
-        >
-          Facebook Login
-        </button>
-      </div> */}
     </>
   );
 }

@@ -1,6 +1,6 @@
-import { Check, Pencil, LayoutGrid, X } from 'lucide-react'
+import { Check, LayoutGrid, Pencil, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import toast from 'react-hot-toast'
+import { EmptyState, PageHeader } from '../components/BoostFundrUI'
 import EditPlanModal from '../components/userPlans/EditPlanModal'
 import { PLAN_META } from '../lib/planMeta'
 import { getToken } from '../lib/utils'
@@ -136,9 +136,10 @@ const UserPlans = () => {
   const [errorMessage, setErrorMessage] = useState('')
   const [editingPlan, setEditingPlan] = useState(null)
 
-  const loadPlans = async () => {
+  const refreshPlans = async () => {
     setIsLoading(true)
     setErrorMessage('')
+
     try {
       const token = getToken()
       if (!token) throw new Error('Missing auth token.')
@@ -147,7 +148,6 @@ const UserPlans = () => {
         headers: { Authorization: `Bearer ${token}` },
       })
 
-      // Response shape: { success, message, data: { plans: [...] } }
       const arr = Array.isArray(response?.data?.plans) ? response.data.plans : []
       setPlans(arr)
     } catch (err) {
@@ -158,34 +158,62 @@ const UserPlans = () => {
   }
 
   useEffect(() => {
-    loadPlans()
+    let isMounted = true
+
+    const run = async () => {
+      setIsLoading(true)
+      setErrorMessage('')
+
+      try {
+        const token = getToken()
+        if (!token) throw new Error('Missing auth token.')
+
+        const response = await apiClient.request('/api/v1/subscription/', {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+
+        const arr = Array.isArray(response?.data?.plans) ? response.data.plans : []
+        if (isMounted) {
+          setPlans(arr)
+        }
+      } catch (err) {
+        if (isMounted) {
+          setErrorMessage(err.message || 'Failed to load subscription plans.')
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false)
+        }
+      }
+    }
+
+    void run()
+
+    return () => {
+      isMounted = false
+    }
   }, [])
 
   return (
     <div className="space-y-6">
-      {/* ── Page Header ─────────────────────────────────────────────────── */}
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-white/40">
-            Subscription Management
-          </p>
-          <h1 className="mt-1 text-3xl font-semibold text-white">User Plans</h1>
-          <p className="mt-1.5 text-sm text-white/60">
-            View and manage the platform's available subscription tiers.
-          </p>
-        </div>
-        <div className="flex items-center gap-2 rounded-xl border border-[#01F27B]/20 bg-[#01F27B]/5 px-4 py-2">
-          <LayoutGrid className="h-4 w-4 text-[#01F27B]" strokeWidth={2} />
-          <span className="text-xs font-semibold text-[#01F27B]">
-            {plans.length} Plan{plans.length !== 1 ? 's' : ''} Active
-          </span>
-        </div>
-      </div>
+      <PageHeader
+        eyebrow="Subscription Management"
+        title="User Plans"
+        description="View and manage the platform's available subscription tiers."
+        actions={[
+          <div key="count" className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/70 backdrop-blur-xl">
+            <LayoutGrid className="h-4 w-4 text-[#01F27B]" strokeWidth={2} />
+            <span className="text-xs font-semibold text-[#01F27B]">
+              {plans.length} Plan{plans.length !== 1 ? 's' : ''} Active
+            </span>
+          </div>,
+        ]}
+      />
 
       {/* ── Error Banner ─────────────────────────────────────────────────── */}
       {errorMessage && (
-        <div className="flex items-center gap-3 rounded-xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
-          <X className="h-4 w-4 shrink-0 text-rose-400" strokeWidth={2} />
+        <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/70 backdrop-blur-xl">
+          <X className="h-4 w-4 shrink-0 text-white/50" strokeWidth={2} />
           {errorMessage}
         </div>
       )}
@@ -203,12 +231,11 @@ const UserPlans = () => {
               />
             ))
           : !errorMessage && (
-              <div className="col-span-3 flex flex-col items-center justify-center rounded-2xl border border-dashed border-white/10 py-20 text-center">
-                <LayoutGrid className="mb-3 h-10 w-10 text-white/20" strokeWidth={1.5} />
-                <p className="text-sm font-semibold text-white/40">No subscription plans found.</p>
-                <p className="mt-1 text-xs text-white/25">
-                  Plans configured in the backend will appear here.
-                </p>
+              <div className="col-span-3">
+                <EmptyState
+                  title="No subscription plans found."
+                  description="Plans configured in the backend will appear here."
+                />
               </div>
             )}
       </div>
@@ -218,7 +245,7 @@ const UserPlans = () => {
         <EditPlanModal
           plan={editingPlan}
           onClose={() => setEditingPlan(null)}
-          onSaved={loadPlans}
+          onSaved={refreshPlans}
         />
       )}
     </div>

@@ -1,57 +1,128 @@
-import React, { useState, useEffect } from 'react'
-import { ArrowLeft, Clock, ShieldAlert, CheckCircle2, User, FileText, Phone, MapPin, Globe, Loader2 } from 'lucide-react'
-import { StatusBadge, RoleBadge, DocumentPreview } from './ui'
-import apiClient from '../../services/apiClient'
+import { ArrowLeft, FileText, Globe, Loader2, MapPin, Phone, ShieldAlert, User } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
+import toast from 'react-hot-toast'
 import { getToken } from '../../lib/utils'
+import apiClient from '../../services/apiClient'
+import { glassCardClass, outlineButtonClass, primaryButtonClass } from '../BoostFundrUI'
+import ActionModal from './ActionModal'
+import { DocumentPreview, RoleBadge, StatusBadge } from './ui'
 
-const VerificationDetail = ({ verification, onBack, onApprove, onReject }) => {
-  const isPending = verification.status === 'pending'
-  const isRejected = verification.status === 'rejected'
-
-  const [userDetails, setUserDetails] = useState(null)
-  const [isLoadingUser, setIsLoadingUser] = useState(false)
+const VerificationDetail = ({ verification, onBack }) => {
+  const [detail, setDetail] = useState(verification)
+  const [isLoadingRequest, setIsLoadingRequest] = useState(false)
+  const [errorMessage, setErrorMessage] = useState('')
+  const [isActionModalOpen, setIsActionModalOpen] = useState(false)
+  const [actionType, setActionType] = useState('approve')
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
-    const fetchUser = async () => {
-      setIsLoadingUser(true)
+    const fetchRequest = async () => {
+      const requestId = verification?._id || verification?.id
+      if (!requestId) return
+
+      setIsLoadingRequest(true)
+      setErrorMessage('')
+
       try {
         const token = getToken()
-        const res = await apiClient.request(`/api/v1/users/all/${verification.id}`, {
-          headers: { Authorization: `Bearer ${token}` }
+        const response = await apiClient.request(`/api/v1/admin/verifications/${requestId}`, {
+          headers: { Authorization: `Bearer ${token}` },
         })
-        const data = res?.data?.user || res?.data || res?.user
-        setUserDetails(data)
-      } catch (err) {
-        console.error('Failed to fetch user details:', err)
+
+        const item = response?.data?.item || response?.data || verification
+        setDetail(item)
+      } catch (error) {
+        setErrorMessage(error.message || 'Unable to load verification detail.')
+        setDetail(verification)
       } finally {
-        setIsLoadingUser(false)
+        setIsLoadingRequest(false)
       }
     }
-    
-    if (verification.id) fetchUser()
-  }, [verification.id])
 
-  const profile = userDetails?.founderProfile || userDetails?.investorProfile
-  const avatarUrl = profile?.profileImage
-  const phone = profile?.phone || '--'
-  const location = userDetails?.founderProfile?.location || '--'
-  const companyName = userDetails?.founderProfile?.companyName || '--'
+    void fetchRequest()
+  }, [verification])
+
+  const request = detail?._id === verification?._id ? detail : verification
+  const applicant = request?.userId || {}
+  const isPending = request?.status === 'pending'
+  const isRejected = request?.status === 'rejected'
+  const fullName = `${applicant.firstName || 'Unknown'} ${applicant.lastName || 'Applicant'}`.trim()
+  const requestId = request?._id || request?.id || verification?._id || verification?.id
+
+  const documentEntries = useMemo(
+    () => Object.entries(request?.documents || {}).filter(([, value]) => Boolean(value)),
+    [request]
+  )
+
+  const reviewedBy = request?.reviewedBy
+  const reviewedByLabel = reviewedBy
+    ? `${reviewedBy.firstName || ''} ${reviewedBy.lastName || ''}`.trim() || reviewedBy.email || '--'
+    : '--'
+
+  const handleActionSubmit = async (reason) => {
+    if (!requestId || isSubmitting) return
+
+    if (actionType === 'reject' && !reason?.trim()) {
+      toast.error('A rejection reason is required.')
+      return
+    }
+
+    setIsSubmitting(true)
+    setErrorMessage('')
+
+    try {
+      const token = getToken()
+      if (!token) throw new Error('Missing auth token.')
+
+      const endpoint =
+        actionType === 'approve'
+          ? `/api/v1/admin/verifications/${requestId}/approve`
+          : `/api/v1/admin/verifications/${requestId}/reject`
+
+      const requestBody = actionType === 'reject' ? { reason: reason.trim() } : undefined
+
+      console.log('Verification review submit request', {
+        requestId,
+        actionType,
+        endpoint,
+        method: 'PATCH',
+        body: requestBody,
+      })
+
+      const response = await apiClient.request(endpoint, {
+        method: 'PATCH',
+        headers: { Authorization: `Bearer ${token}` },
+        body: requestBody ? JSON.stringify(requestBody) : undefined,
+      })
+
+      console.log('Verification review submit response', response)
+
+      const updatedItem = response?.data?.item || response?.data || request
+      setDetail(updatedItem)
+      toast.success(response?.message || 'Verification updated successfully')
+      setIsActionModalOpen(false)
+    } catch (error) {
+      const message = error.message || 'Unable to update verification request.'
+      setErrorMessage(message)
+      toast.error(message)
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
 
   return (
     <div className="space-y-6">
       <button 
         onClick={onBack}
-        className="flex items-center gap-2 text-sm font-semibold text-white/50 hover:text-white transition-colors"
+        className="flex items-center gap-2 text-sm font-semibold text-white/50 transition-colors hover:text-white"
       >
         <ArrowLeft className="w-4 h-4" />
         Back to List
       </button>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
-        {/* Left Column: User Info */}
         <div className="flex flex-col gap-6">
-          <div className="bg-[#0c0c0c] border border-white/10 rounded-2xl p-6 shadow-xl relative overflow-hidden">
+          <div className={`relative overflow-hidden ${glassCardClass} p-6 shadow-xl`}>
             <div className="absolute top-0 right-0 p-6 opacity-5">
               <User className="w-32 h-32" />
             </div>
@@ -62,24 +133,22 @@ const VerificationDetail = ({ verification, onBack, onApprove, onReject }) => {
 
             <div className="space-y-6 relative z-10">
               <div className="flex items-center gap-4">
-                <div className="h-16 w-16 overflow-hidden rounded-full border-2 border-white/10 bg-white/5 flex items-center justify-center">
-                  {isLoadingUser ? (
+                <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border-2 border-white/10 bg-white/5">
+                  {isLoadingRequest ? (
                     <Loader2 className="w-6 h-6 text-white/40 animate-spin" />
-                  ) : avatarUrl ? (
-                    <img src={avatarUrl} alt={verification.name} className="w-full h-full object-cover" />
                   ) : (
                     <User className="w-6 h-6 text-white/40" />
                   )}
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-white">{verification.name}</h2>
-                  <p className="text-sm text-white/50 mt-0.5">{verification.email}</p>
+                  <h2 className="text-xl font-bold text-white">{fullName}</h2>
+                  <p className="text-sm text-white/50 mt-0.5">{applicant.email || 'No email on record'}</p>
                 </div>
               </div>
 
               <div className="flex gap-2">
-                <RoleBadge role={verification.role} />
-                <StatusBadge status={verification.status} />
+                <RoleBadge role={request?.type || applicant.role || 'founder'} />
+                <StatusBadge status={request?.status || 'pending'} />
               </div>
 
               <div className="w-full h-px bg-white/5 my-2" />
@@ -91,11 +160,11 @@ const VerificationDetail = ({ verification, onBack, onApprove, onReject }) => {
                   </div>
                   <div>
                     <p className="text-[10px] font-bold uppercase tracking-widest text-white/40">Phone Number</p>
-                    <p className="text-sm text-white/80 mt-0.5">{phone}</p>
+                    <p className="text-sm text-white/80 mt-0.5">{applicant.phone || '--'}</p>
                   </div>
                 </div>
 
-                {verification.role === 'founder' && (
+                {(request?.type || applicant.role) === 'founder' && (
                   <>
                     <div className="flex items-center gap-3">
                       <div className="p-2 rounded-lg bg-white/5 text-white/40">
@@ -103,7 +172,7 @@ const VerificationDetail = ({ verification, onBack, onApprove, onReject }) => {
                       </div>
                       <div>
                         <p className="text-[10px] font-bold uppercase tracking-widest text-white/40">Company Name</p>
-                        <p className="text-sm text-white/80 mt-0.5">{companyName}</p>
+                        <p className="text-sm text-white/80 mt-0.5">{applicant.companyName || '--'}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
@@ -112,7 +181,7 @@ const VerificationDetail = ({ verification, onBack, onApprove, onReject }) => {
                       </div>
                       <div>
                         <p className="text-[10px] font-bold uppercase tracking-widest text-white/40">Location</p>
-                        <p className="text-sm text-white/80 mt-0.5">{location}</p>
+                        <p className="text-sm text-white/80 mt-0.5">{applicant.location || '--'}</p>
                       </div>
                     </div>
                   </>
@@ -124,96 +193,94 @@ const VerificationDetail = ({ verification, onBack, onApprove, onReject }) => {
               <div className="space-y-3 text-sm">
                 <div className="flex justify-between">
                   <span className="text-white/40">Submitted</span>
-                  <span className="text-white/80">{new Date(verification.date).toLocaleDateString()}</span>
+                  <span className="text-white/80">{request?.createdAt ? new Date(request.createdAt).toLocaleDateString() : '--'}</span>
                 </div>
-                {verification.reviewedBy && (
+                <div className="flex justify-between">
+                  <span className="text-white/40">Updated</span>
+                  <span className="text-white/80">{request?.updatedAt ? new Date(request.updatedAt).toLocaleDateString() : '--'}</span>
+                </div>
+                {reviewedBy && (
                   <div className="flex justify-between">
                     <span className="text-white/40">Reviewed By</span>
-                    <span className="text-white/80">{verification.reviewedBy}</span>
+                    <span className="text-white/80">{reviewedByLabel}</span>
                   </div>
                 )}
-                {verification.reviewedAt && (
+                {request?.reviewedAt && (
                   <div className="flex justify-between">
-                    <span className="text-white/40">Review Date</span>
-                    <span className="text-white/80">{new Date(verification.reviewedAt).toLocaleDateString()}</span>
+                    <span className="text-white/40">Reviewed At</span>
+                    <span className="text-white/80">{new Date(request.reviewedAt).toLocaleDateString()}</span>
                   </div>
                 )}
               </div>
             </div>
           </div>
 
-          {isRejected && verification.rejectionReason && (
-            <div className="bg-rose-500/5 border border-rose-500/20 rounded-2xl p-6">
+          {isRejected && request?.rejectionReason && (
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-xl">
               <div className="flex items-center gap-2 mb-3">
-                <ShieldAlert className="w-5 h-5 text-rose-400" />
-                <h3 className="text-sm font-bold text-rose-400 uppercase tracking-wider">Rejection Reason</h3>
+                <ShieldAlert className="w-5 h-5 text-white/60" />
+                <h3 className="text-sm font-bold uppercase tracking-wider text-white/60">Rejection Reason</h3>
               </div>
               <p className="text-sm text-rose-200/80 leading-relaxed">
-                {verification.rejectionReason}
+                {request.rejectionReason}
               </p>
             </div>
           )}
+
+          {errorMessage ? (
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-white/70 backdrop-blur-xl">
+              {errorMessage}
+            </div>
+          ) : null}
         </div>
 
-        {/* Right Column: Documents & Actions */}
         <div className="lg:col-span-2 flex flex-col gap-6">
-          <div className="bg-[#0c0c0c] border border-white/10 rounded-2xl p-6 shadow-xl flex-1">
+          <div className={`flex-1 p-6 ${glassCardClass} shadow-xl`}>
             <div className="flex items-center gap-2 mb-6 border-b border-white/5 pb-4">
               <FileText className="w-5 h-5 text-[#01F27B]" />
               <h2 className="text-lg font-bold text-white">Submitted Documents</h2>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {verification.documents.nidFront && (
-                <DocumentPreview 
-                  title="NID Front" 
-                  url={verification.documents.nidFront} 
-                  onClick={() => window.open(verification.documents.nidFront, '_blank')}
+              {documentEntries.map(([label, url]) => (
+                <DocumentPreview
+                  key={label}
+                  title={label.replace(/([A-Z])/g, ' $1').replace(/^./, (letter) => letter.toUpperCase())}
+                  url={url}
+                  onClick={() => window.open(url, '_blank')}
                 />
-              )}
-              {verification.documents.nidBack && (
-                <DocumentPreview 
-                  title="NID Back" 
-                  url={verification.documents.nidBack} 
-                  onClick={() => window.open(verification.documents.nidBack, '_blank')}
-                />
-              )}
-              {verification.documents.businessCertificate && (
-                <DocumentPreview 
-                  title="Business Certificate" 
-                  url={verification.documents.businessCertificate} 
-                  onClick={() => window.open(verification.documents.businessCertificate, '_blank')}
-                />
-              )}
-              {verification.documents.incomeStatement && (
-                <DocumentPreview 
-                  title="Income Statement" 
-                  url={verification.documents.incomeStatement} 
-                  onClick={() => window.open(verification.documents.incomeStatement, '_blank')}
-                />
-              )}
+              ))}
             </div>
           </div>
 
           {isPending && (
-            <div className="bg-[#0c0c0c] border border-white/10 rounded-2xl p-6 shadow-xl flex items-center justify-between gap-4">
+            <div className={`flex items-center justify-between gap-4 p-6 ${glassCardClass} shadow-xl`}>
               <div>
                 <h3 className="text-lg font-bold text-white">Review Action</h3>
-                <p className="text-sm text-white/50 mt-1">Please ensure all documents meet compliance standards before approving.</p>
+                <p className="text-sm text-white/50 mt-1">
+                  Approve or reject this verification request. Rejecting requires a reason.
+                </p>
               </div>
               <div className="flex gap-3 shrink-0">
                 <button 
-                  onClick={onReject}
-                  className="px-6 py-2.5 rounded-xl border border-rose-500/20 bg-rose-500/10 text-rose-400 font-bold hover:bg-rose-500/20 hover:border-rose-500/40 transition-colors"
+                  onClick={() => {
+                    setActionType('reject')
+                    setIsActionModalOpen(true)
+                  }}
+                  disabled={isSubmitting}
+                  className={`${outlineButtonClass} px-6 py-2.5 text-white/70 disabled:cursor-not-allowed disabled:opacity-60`}
                 >
                   Reject
                 </button>
                 <button 
-                  onClick={onApprove}
-                  className="px-6 py-2.5 rounded-xl bg-[#01F27B] text-black font-bold hover:bg-[#01F27B]/90 transition-colors flex items-center gap-2 shadow-lg shadow-[#01F27B]/20"
+                  onClick={() => {
+                    setActionType('approve')
+                    setIsActionModalOpen(true)
+                  }}
+                  disabled={isSubmitting}
+                  className={`${primaryButtonClass} gap-2 px-6 py-2.5 disabled:cursor-not-allowed disabled:opacity-60`}
                 >
-                  <CheckCircle2 className="w-5 h-5" />
-                  Approve
+                  {isSubmitting ? 'Updating...' : 'Approve'}
                 </button>
               </div>
             </div>
@@ -221,6 +288,13 @@ const VerificationDetail = ({ verification, onBack, onApprove, onReject }) => {
         </div>
 
       </div>
+
+      <ActionModal
+        isOpen={isActionModalOpen}
+        onClose={() => setIsActionModalOpen(false)}
+        onSubmit={handleActionSubmit}
+        type={actionType}
+      />
     </div>
   )
 }

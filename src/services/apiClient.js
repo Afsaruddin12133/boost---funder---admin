@@ -14,13 +14,14 @@ const request = async (path, options = {}) => {
   const isFormData =
     typeof FormData !== "undefined" && options.body instanceof FormData;
   const baseHeaders = isFormData ? {} : { "Content-Type": "application/json" };
+  const headers = {
+    ...baseHeaders,
+    ...(options.headers || {}),
+  };
 
   const response = await fetch(buildUrl(path), {
-    headers: {
-      ...baseHeaders,
-      ...(options.headers || {}),
-    },
     ...options,
+    headers,
   });
 
   const data = await response.json().catch(() => null);

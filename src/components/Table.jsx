@@ -1,5 +1,6 @@
 import { ArrowUpDown } from 'lucide-react'
 import { useMemo, useState } from 'react'
+import { glassCardClass } from './BoostFundrUI'
 
 const statusStyles = {
   approved: 'bg-emerald-500/15 text-emerald-200',
@@ -51,7 +52,7 @@ const Table = ({ columns, data, initialSort }) => {
   }
 
   return (
-    <div className="overflow-x-auto rounded-2xl border border-white/10 bg-black/50 shadow-sm shadow-black/40">
+    <div className={`overflow-x-auto ${glassCardClass}`}>
       <table className="min-w-full text-left text-sm">
         <thead className="bg-white/5 text-xs uppercase tracking-wider text-white/50">
           <tr>

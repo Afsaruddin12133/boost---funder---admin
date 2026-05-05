@@ -1,14 +1,14 @@
 import {
-  Bell,
-  Briefcase,
-  ClipboardList,
-  CreditCard,
-  LayoutDashboard,
-  LineChart,
-  Settings,
-  ShieldCheck,
-  Star,
-  Users,
+    Bell,
+    Briefcase,
+    ClipboardList,
+    CreditCard,
+    LayoutDashboard,
+    LineChart,
+    Settings,
+    ShieldCheck,
+    Star,
+    Users,
 } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useLocation } from 'react-router-dom'
@@ -26,7 +26,13 @@ const AdminLayout = ({ children }) => {
   }, [location.pathname])
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#04140A] via-[#061F11] to-black text-white">
+    <div className="min-h-screen bg-black text-white">
+      <div className="pointer-events-none fixed inset-0 overflow-hidden">
+        <div className="absolute left-0 top-0 h-96 w-96 rounded-full bg-[#01F27B]/10 blur-[140px]" />
+        <div className="absolute right-0 top-24 h-[30rem] w-[30rem] rounded-full bg-white/5 blur-[160px]" />
+        <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-black to-transparent" />
+      </div>
+
       <Sidebar
         items={navItems}
         activeItem={activeItem}
@@ -44,10 +50,6 @@ const AdminLayout = ({ children }) => {
         <Navbar onOpenSidebar={() => setIsMobileOpen(true)} />
 
         <main className="relative px-4 pb-16 pt-6 lg:px-8">
-          <div className="pointer-events-none absolute inset-0 overflow-hidden">
-            <div className="absolute -left-20 top-10 h-56 w-56 rounded-full bg-[#01F27B]/15 blur-3xl" />
-            <div className="absolute right-10 top-32 h-72 w-72 rounded-full bg-white/10 blur-3xl" />
-          </div>
           <div className="relative">{children}</div>
         </main>
       </div>

@@ -2,7 +2,9 @@ import { Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
+import { fieldClass, glassCardClass, primaryButtonClass } from "../components/BoostFundrUI";
 import apiClient from "../services/apiClient";
+import Logo from "../components/Logo";
 
 const TOKEN_STORAGE_KEY = import.meta.env.VITE_TOKEN_STORAGE_KEY;
 const EMAIL_STORAGE_KEY = import.meta.env.VITE_EMAIL_STORAGE_KEY;
@@ -68,7 +70,14 @@ const Login = () => {
       </div>
 
       <div className="relative mx-auto flex min-h-screen w-full max-w-xl items-center justify-center px-4 py-16">
-        <div className="w-full rounded-[28px] border border-white/15 bg-gradient-to-b from-white/10 via-black/40 to-black/70 p-8 shadow-2xl backdrop-blur">
+        <div className={`w-full p-8 ${glassCardClass} bg-gradient-to-b from-white/10 via-black/40 to-black/70`}>
+          <div className="flex flex-col items-center mb-8 gap-2">
+            <Logo size="lg" className="scale-110" />
+            <div className="w-24 h-px bg-[#01F27B]/30 my-1" />
+            <span className="text-[10px] text-[#01F27B] font-black uppercase tracking-[0.4em] opacity-80">
+              Admin Portal
+            </span>
+          </div>
           <form onSubmit={handleSubmit} className="space-y-5">
             <label className="block text-sm text-white">
               Email address
@@ -78,7 +87,7 @@ const Login = () => {
                 placeholder="admin@boostfundr.com"
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
-                className="mt-2 w-full rounded-2xl border border-white/20 bg-black/70 px-4 py-3 text-sm text-white placeholder:text-white/60 focus:border-[#01F27B] focus:outline-none"
+                className={`mt-2 ${fieldClass}`}
               />
             </label>
 
@@ -91,7 +100,7 @@ const Login = () => {
                   placeholder="Enter your password"
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
-                  className="w-full rounded-2xl border border-white/20 bg-black/70 px-4 py-3 pr-12 text-sm text-white placeholder:text-white/60 focus:border-[#01F27B] focus:outline-none"
+                  className={`pr-12 ${fieldClass}`}
                 />
                 <button
                   type="button"
@@ -121,7 +130,7 @@ const Login = () => {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full rounded-2xl bg-gradient-to-r from-[#01F27B] via-[#7CFFB2] to-white px-4 py-3 text-sm font-semibold text-black transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-70 cursor-pointer"
+              className={`${primaryButtonClass} w-full disabled:cursor-not-allowed disabled:opacity-70`}
             >
               {isSubmitting ? "Signing in..." : "Sign in to Dashboard"}
             </button>

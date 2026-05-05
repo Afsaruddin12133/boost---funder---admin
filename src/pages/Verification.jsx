@@ -1,101 +1,76 @@
-import React, { useState } from 'react'
-import { mockVerifications } from '../components/verification/mockData'
+import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { PageHeader, outlineButtonClass } from '../components/BoostFundrUI'
 import VerificationList from '../components/verification/VerificationList'
-import VerificationDetail from '../components/verification/VerificationDetail'
-import ActionModal from '../components/verification/ActionModal'
-import toast from 'react-hot-toast'
+import { getToken } from '../lib/utils'
+import apiClient from '../services/apiClient'
 
 const Verification = () => {
-  const [verifications, setVerifications] = useState(mockVerifications)
-  const [selectedVerification, setSelectedVerification] = useState(null)
-  
-  // Modal state
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [modalType, setModalType] = useState('approve') // 'approve' | 'reject'
+  const navigate = useNavigate()
+  const [verifications, setVerifications] = useState([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [errorMessage, setErrorMessage] = useState('')
 
-  const handleApproveClick = () => {
-    setModalType('approve')
-    setIsModalOpen(true)
+  const loadVerifications = async () => {
+    setIsLoading(true)
+    setErrorMessage('')
+
+    try {
+      const token = getToken()
+      if (!token) throw new Error('Missing auth token.')
+
+      const response = await apiClient.request('/api/v1/admin/verifications/', {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+
+      const items = Array.isArray(response?.data?.items) ? response.data.items : []
+      setVerifications(items)
+    } catch (error) {
+      setErrorMessage(error.message || 'Unable to load verification requests.')
+      setVerifications([])
+    } finally {
+      setIsLoading(false)
+    }
   }
 
-  const handleRejectClick = () => {
-    setModalType('reject')
-    setIsModalOpen(true)
-  }
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      void loadVerifications()
+    }, 0)
 
-  const handleModalSubmit = (reason) => {
-    if (!selectedVerification) return
+    return () => window.clearTimeout(timeoutId)
+  }, [])
 
-    setVerifications(prev => prev.map(v => {
-      if (v.id === selectedVerification.id) {
-        const updated = {
-          ...v,
-          status: modalType === 'approve' ? 'approved' : 'rejected',
-          reviewedBy: 'Admin Current',
-          reviewedAt: new Date().toISOString()
-        }
-        if (modalType === 'reject') {
-          updated.rejectionReason = reason
-          updated.verified = false
-        } else {
-          updated.verified = true
-          updated.rejectionReason = null
-        }
-        return updated
-      }
-      return v
-    }))
-
-    toast.success(
-      modalType === 'approve' 
-        ? 'Verification approved successfully' 
-        : 'Verification rejected successfully'
-    )
-    
-    // Update local selected state to reflect changes immediately
-    setSelectedVerification(prev => ({
-      ...prev,
-      status: modalType === 'approve' ? 'approved' : 'rejected',
-      reviewedBy: 'Admin Current',
-      reviewedAt: new Date().toISOString(),
-      verified: modalType === 'approve',
-      rejectionReason: modalType === 'reject' ? reason : null
-    }))
-    
-    setIsModalOpen(false)
+  const handleReview = (verification) => {
+    navigate(`/verification/${verification._id}`)
   }
 
   return (
     <div className="space-y-6">
-      
-      <div className="flex flex-col gap-1 mb-8">
-        <h1 className="text-3xl font-bold text-white tracking-tight">Verification Center</h1>
-        <p className="text-sm text-white/50">
-          Manage identity checks and document reviews for platform compliance.
-        </p>
-      </div>
-
-      {!selectedVerification ? (
-        <VerificationList 
-          verifications={verifications} 
-          onView={setSelectedVerification} 
-        />
-      ) : (
-        <VerificationDetail 
-          verification={selectedVerification} 
-          onBack={() => setSelectedVerification(null)}
-          onApprove={handleApproveClick}
-          onReject={handleRejectClick}
-        />
-      )}
-
-      <ActionModal 
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSubmit={handleModalSubmit}
-        type={modalType}
+      <PageHeader
+        eyebrow="Verification Center"
+        title="Verification Review"
+        description="Manage founder and investor verification requests in one clean review surface."
+        actions={[
+          <button key="refresh" type="button" onClick={loadVerifications} className={outlineButtonClass}>
+            Refresh
+          </button>,
+        ]}
       />
 
+      {errorMessage ? (
+        <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/70 backdrop-blur-xl">
+          {errorMessage}
+        </div>
+      ) : null}
+
+      {isLoading ? (
+        <div className="rounded-2xl border border-white/10 bg-white/5 px-6 py-10 text-center text-white/70 backdrop-blur-xl">
+          Loading verification requests...
+        </div>
+      ) : (
+        <VerificationList verifications={verifications} onView={handleReview} />
+      )}
     </div>
   )
 }

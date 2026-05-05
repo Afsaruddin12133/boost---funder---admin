@@ -2,14 +2,42 @@
 @import "tailwindcss";
 
 @layer base {
+  html {
+    background: #000000;
+  }
+
   body {
     font-family: "Manrope", "Segoe UI", sans-serif;
     color: #f8fafc;
-    background-color: #04140a;
+    background:
+      radial-gradient(
+        circle at top left,
+        rgba(1, 242, 123, 0.08),
+        transparent 24%
+      ),
+      radial-gradient(
+        circle at top right,
+        rgba(255, 255, 255, 0.05),
+        transparent 20%
+      ),
+      linear-gradient(180deg, #04110a 0%, #000000 100%);
+    background-color: #000000;
+    min-height: 100vh;
   }
 
   * {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+  }
+
+  ::selection {
+    background: rgba(1, 242, 123, 0.25);
+    color: #ffffff;
+  }
+}
+
+@layer utilities {
+  .boost-glow {
+    box-shadow: 0 0 40px rgba(1, 242, 123, 0.15);
   }
 }

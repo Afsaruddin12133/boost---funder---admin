@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
-import apiClient from '../services/apiClient'
-import { getToken } from '../lib/utils'
-import FilterBar from '../components/deals/FilterBar'
+import { EmptyState, PageHeader } from '../components/BoostFundrUI'
 import DealCard from '../components/deals/DealCard'
+import FilterBar from '../components/deals/FilterBar'
+import { getToken } from '../lib/utils'
+import apiClient from '../services/apiClient'
 
 const Deals = () => {
   const [deals, setDeals] = useState([])
@@ -84,18 +85,16 @@ const Deals = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-white/50">Deals</p>
-          <h1 className="mt-2 text-3xl font-semibold text-white">Deal Management</h1>
-          <p className="mt-2 text-sm text-white/60">
-            Review, approve, and manage startup deals with real-time context.
-          </p>
-        </div>
-        <div className="rounded-xl border border-white/10 bg-black/40 px-4 py-2 text-sm text-white/70">
-          {filteredDeals.length} deals
-        </div>
-      </div>
+      <PageHeader
+        eyebrow="Deals"
+        title="Deal Management"
+        description="Review, approve, and manage startup deals with real-time context."
+        actions={[
+          <div key="count" className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/70 backdrop-blur-xl">
+            {filteredDeals.length} deals
+          </div>,
+        ]}
+      />
 
       <FilterBar
         filters={filters}
@@ -107,29 +106,36 @@ const Deals = () => {
       />
 
       {errorMessage ? (
-        <div className="rounded-xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-100">
+        <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/70 backdrop-blur-xl">
           {errorMessage}
         </div>
       ) : null}
 
       {isLoading ? (
-        <div className="rounded-3xl border border-white/10 bg-black/40 px-6 py-10 text-center text-white/70">
+        <div className="rounded-3xl border border-white/10 bg-white/5 px-6 py-10 text-center text-white/70 backdrop-blur-xl">
           Loading deals...
         </div>
       ) : (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {pagedDeals.map((deal) => (
-            <DealCard
-              key={deal.id}
-              deal={deal}
-              actionState={actionLoading[deal.id]}
-              onApprove={(id) => updateStatus(id, 'approved')}
-              onReject={(id) => updateStatus(id, 'rejected')}
-              onView={(id) => console.info('View deal', id)}
-              onFeature={(id) => console.info('Feature deal', id)}
-            />
-          ))}
-        </div>
+        pagedDeals.length > 0 ? (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {pagedDeals.map((deal) => (
+              <DealCard
+                key={deal.id}
+                deal={deal}
+                actionState={actionLoading[deal.id]}
+                onApprove={(id) => updateStatus(id, 'approved')}
+                onReject={(id) => updateStatus(id, 'rejected')}
+                onView={(id) => console.info('View deal', id)}
+                onFeature={(id) => console.info('Feature deal', id)}
+              />
+            ))}
+          </div>
+        ) : (
+          <EmptyState
+            title="No deals matched your filters."
+            description="Adjust the status, category, or search filter to surface more opportunities."
+          />
+        )
       )}
 
       <div className="flex flex-wrap items-center justify-between gap-4">
@@ -141,7 +147,7 @@ const Deals = () => {
             type="button"
             onClick={() => handlePageChange(page - 1)}
             disabled={page === 1}
-            className="rounded-xl border border-white/10 px-4 py-2 text-sm text-white/70 transition hover:border-white/30 disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/70 transition-all duration-300 hover:border-[#01F27B]/40 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
           >
             Previous
           </button>
@@ -149,7 +155,7 @@ const Deals = () => {
             type="button"
             onClick={() => handlePageChange(page + 1)}
             disabled={page === totalPages}
-            className="rounded-xl border border-white/10 px-4 py-2 text-sm text-white/70 transition hover:border-white/30 disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/70 transition-all duration-300 hover:border-[#01F27B]/40 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
           >
             Next
           </button>
