@@ -3,10 +3,10 @@ import { fieldClass, glassCardClass } from '../BoostFundrUI'
 import CategorySelect from './CategorySelect'
 
 const FilterBar = ({ filters, categories, onChange }) => {
-  const statuses = ['all deals', 'draft', 'complete', 'pendingReview', 'approved', 'rejected']
+  const statuses = ['pendingReview', 'approved', 'rejected']
 
   return (
-    <div className={`${glassCardClass} flex flex-wrap items-center gap-3 px-4 py-3`}>
+    <div className={`${glassCardClass} relative z-30 flex flex-wrap items-center gap-3 px-4 py-3`}>
       <div className="flex items-center gap-2 text-sm text-white/70">
         <Filter className="h-4 w-4" strokeWidth={1.8} />
         Filters

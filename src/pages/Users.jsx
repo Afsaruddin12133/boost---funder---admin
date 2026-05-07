@@ -1,42 +1,11 @@
-import { Award, Ban, ChevronDown, ChevronLeft, ChevronRight, Download, ShieldAlert, Trash2, TrendingUp, UserPlus, Users as UsersIcon } from 'lucide-react'
+import { Ban, ChevronLeft, ChevronRight, Download, Trash2 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import toast from 'react-hot-toast'
-import { PageHeader, glassCardClass, outlineButtonClass, primaryButtonClass, selectClass } from '../components/BoostFundrUI'
+import { PageHeader, Select, glassCardClass, outlineButtonClass } from '../components/BoostFundrUI'
 import UserDetailsModal from '../components/users/UserDetailsModal'
 import UserTable from '../components/users/UserTable'
 import { getToken } from '../lib/utils'
 import apiClient from '../services/apiClient'
-
-const StatCard = ({ icon: Icon, title, value, trend, trendLabel, trendUp, alert }) => (
-  <div className="group relative overflow-hidden flex flex-col gap-4 rounded-2xl border border-white/10 bg-[#0c0c0c] p-5 shadow-lg transition-all duration-300 hover:border-[#01F27B]/30 hover:shadow-[#01F27B]/5">
-    {/* Gradient Backgrounds */}
-    <div className="absolute inset-0 bg-gradient-to-br from-[#01F27B]/5 via-black/50 to-black/80 opacity-60 transition-opacity duration-300 group-hover:opacity-100"></div>
-    <div className="absolute -inset-x-20 -top-20 h-[150px] w-full rotate-45 bg-gradient-to-b from-[#01F27B]/20 to-transparent opacity-0 blur-3xl transition-opacity duration-500 group-hover:opacity-100"></div>
-    
-    <div className="relative z-10 flex items-start justify-between">
-      <div className="rounded-xl bg-gradient-to-br from-white/10 to-transparent p-2.5 text-white/90 shadow-inner shadow-white/5 ring-1 ring-white/10 backdrop-blur-md transition-all duration-300 group-hover:text-[#01F27B] group-hover:ring-[#01F27B]/30">
-        <Icon className="h-5 w-5" strokeWidth={1.8} />
-      </div>
-      {trend ? (
-        <span className={`rounded-full border px-2 py-1 text-[10px] font-bold backdrop-blur-sm ${trendUp ? 'border-emerald-500/20 bg-emerald-500/10 text-[#01F27B]' : 'border-rose-500/20 bg-rose-500/10 text-rose-400'}`}>
-          {trend}
-        </span>
-      ) : alert ? (
-        <span className="rounded-full border border-rose-500/20 bg-rose-500/10 px-2 py-1 text-[10px] font-bold text-rose-400 backdrop-blur-sm">
-          {alert}
-        </span>
-      ) : trendLabel ? (
-        <span className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-1 text-[10px] font-bold text-[#01F27B] backdrop-blur-sm">
-          {trendLabel}
-        </span>
-      ) : null}
-    </div>
-    <div className="relative z-10">
-      <h3 className="text-3xl font-bold tracking-tight text-white">{value}</h3>
-      <p className="mt-1 text-xs font-semibold uppercase tracking-wider text-white/40 group-hover:text-white/60 transition-colors duration-300">{title}</p>
-    </div>
-  </div>
-)
 
 const Users = () => {
   const [allUsers, setAllUsers] = useState([])
@@ -44,6 +13,7 @@ const Users = () => {
   const [errorMessage, setErrorMessage] = useState('')
   const [page, setPage] = useState(1)
   const [selectedUser, setSelectedUser] = useState(null)
+  const [selectedUserIds, setSelectedUserIds] = useState([])
   const [roleFilter, setRoleFilter] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
   const [suspendFilter, setSuspendFilter] = useState('')
@@ -53,6 +23,7 @@ const Users = () => {
   const refreshUsers = async () => {
     setIsLoading(true)
     setErrorMessage('')
+    setSelectedUserIds([])
 
     try {
       const token = getToken()
@@ -72,8 +43,53 @@ const Users = () => {
     }
   }
 
-  const handleFilterChange = (setter) => (e) => {
-    setter(e.target.value)
+  const handleBulkDelete = async () => {
+    if (!selectedUserIds.length) return
+    if (!window.confirm(`Are you sure you want to delete ${selectedUserIds.length} selected users?`)) return
+
+    try {
+      const token = getToken()
+      await Promise.all(selectedUserIds.map(id => 
+        apiClient.request(`/api/v1/users/all/${id}`, {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${token}` }
+        })
+      ))
+      
+      toast.success(`Successfully deleted ${selectedUserIds.length} users`)
+      await refreshUsers()
+    } catch (error) {
+      toast.error(error.message || 'Bulk delete failed')
+    }
+  }
+
+  const handleBulkSuspend = async () => {
+    if (!selectedUserIds.length) return
+    const reason = window.prompt(`Reason for suspending ${selectedUserIds.length} users:`)
+    if (reason === null) return
+
+    try {
+      const token = getToken()
+      await Promise.all(selectedUserIds.map(id => 
+        apiClient.request(`/api/v1/users/all/${id}/suspend`, {
+          method: 'PATCH',
+          headers: { 
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ isSuspended: true, reason })
+        })
+      ))
+      
+      toast.success(`Successfully suspended ${selectedUserIds.length} users`)
+      await refreshUsers()
+    } catch (error) {
+      toast.error(error.message || 'Bulk suspension failed')
+    }
+  }
+
+  const handleFilterChange = (setter) => (val) => {
+    setter(val)
     setPage(1)
   }
 
@@ -179,6 +195,70 @@ const Users = () => {
     }
   }
 
+  const handleExportCSV = () => {
+    if (allUsers.length === 0) {
+      toast.error('No users to export.')
+      return
+    }
+
+    try {
+      // Define CSV headers
+      const headers = [
+        'ID',
+        'First Name',
+        'Last Name',
+        'Email',
+        'Role',
+        'Subscription Plan',
+        'Verified Status',
+        'Suspended',
+        'Created Date',
+        'Last Login',
+        'Phone Number'
+      ]
+
+      // Map user data to CSV rows
+      const rows = allUsers.map(user => [
+        user._id || user.id || '',
+        user.firstName || '',
+        user.lastName || '',
+        user.email || '',
+        user.role || '',
+        user.subscription?.plan || 'free',
+        user.isVerified ? 'Yes' : 'No',
+        user.isSuspended ? 'Yes' : 'No',
+        user.createdAt ? new Date(user.createdAt).toLocaleDateString() : '',
+        user.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : '',
+        user.phoneNumber || ''
+      ])
+
+      // Create CSV content
+      const csvContent = [
+        headers.map(h => `"${h}"`).join(','),
+        ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+      ].join('\n')
+
+      // Create blob and download
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+      const link = document.createElement('a')
+      const url = URL.createObjectURL(blob)
+      
+      link.setAttribute('href', url)
+      link.setAttribute('download', `users_export_${new Date().toISOString().split('T')[0]}.csv`)
+      link.style.visibility = 'hidden'
+      
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      
+      toast.success(`Exported ${allUsers.length} users to CSV.`)
+    } catch (error) {
+      const msg = error.message || 'Failed to export users.'
+      setErrorMessage(msg)
+      toast.error(msg)
+    }
+  }
+
   useEffect(() => {
     let isMounted = true
 
@@ -224,80 +304,60 @@ const Users = () => {
         title="Users"
         description="Manage permissions, access levels, and subscription status for all platform members."
         actions={[
-          <button key="export" className={outlineButtonClass}>
+          <button key="export" className={outlineButtonClass} onClick={handleExportCSV}>
             <Download className="h-4 w-4" strokeWidth={2} />
             Export CSV
-          </button>,
-          <button key="create" className={primaryButtonClass}>
-            <UserPlus className="h-4 w-4" strokeWidth={2} />
-            Create Deal User
           </button>,
         ]}
       />
 
-      {/* Top Stats */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard icon={UsersIcon} title="Total Platform Users" value={allUsers.length || 0} trend="+12%" trendUp />
-        <StatCard icon={Award} title="Premium Subscribers" value={allUsers.filter(u => u.subscription?.plan === 'pro').length} />
-        <StatCard icon={TrendingUp} title="Activity Retention" value="92.4%" trendLabel="ACTIVE" />
-        <StatCard icon={ShieldAlert} title="Pending Verifications" value={allUsers.filter(u => !u.isVerified).length} alert={allUsers.filter(u => !u.isVerified).length > 0 ? "FLAGGED" : null} />
-      </div>
-
-      {/* Filters & Bulk Actions */}
-      <div className={`${glassCardClass} flex flex-wrap items-center justify-between gap-4 p-4`}>
+      {/* User Table */}
+      <div className={`${glassCardClass} relative z-30 flex flex-wrap items-center justify-between gap-4 p-4`}>
         <div className="flex items-center gap-3">
-          <div className="relative">
-            <select 
-              value={roleFilter} 
-              onChange={handleFilterChange(setRoleFilter)}
-              className={`${selectClass} min-w-[140px] pr-10`}
-            >
-              <option value="">All Roles</option>
-              <option value="founder">Founder</option>
-              <option value="investor">Investor</option>
-              <option value="guest">Guest</option>
-            </select>
-            <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" strokeWidth={2} />
-          </div>
+          <Select
+            value={roleFilter}
+            onChange={handleFilterChange(setRoleFilter)}
+            className="min-w-[140px]"
+            options={[
+              { value: '', label: 'All Roles' },
+              { value: 'founder', label: 'Founder' },
+              { value: 'investor', label: 'Investor' },
+              { value: 'guest', label: 'Guest' },
+            ]}
+          />
 
-          <div className="relative">
-            <select 
-              value={statusFilter} 
-              onChange={handleFilterChange(setStatusFilter)}
-              className={`${selectClass} min-w-[140px] pr-10`}
-            >
-              <option value="">Status</option>
-              <option value="true">Verified</option>
-              <option value="false">Unverified</option>
-            </select>
-            <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" strokeWidth={2} />
-          </div>
+          <Select
+            value={statusFilter}
+            onChange={handleFilterChange(setStatusFilter)}
+            className="min-w-[140px]"
+            options={[
+              { value: '', label: 'Status' },
+              { value: 'true', label: 'Verified' },
+              { value: 'false', label: 'Unverified' },
+            ]}
+          />
 
-          <div className="relative">
-            <select 
-              value={suspendFilter} 
-              onChange={handleFilterChange(setSuspendFilter)}
-              className={`${selectClass} min-w-[140px] pr-10`}
-            >
-              <option value="">Suspension</option>
-              <option value="true">Suspended</option>
-              <option value="false">Active</option>
-            </select>
-            <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" strokeWidth={2} />
-          </div>
+          <Select
+            value={suspendFilter}
+            onChange={handleFilterChange(setSuspendFilter)}
+            className="min-w-[140px]"
+            options={[
+              { value: '', label: 'Suspension' },
+              { value: 'true', label: 'Suspended' },
+              { value: 'false', label: 'Active' },
+            ]}
+          />
 
-          <div className="relative">
-            <select 
-              value={subscriptionFilter} 
-              onChange={handleFilterChange(setSubscriptionFilter)}
-              className={`${selectClass} min-w-[140px] pr-10`}
-            >
-              <option value="">Subscription</option>
-              <option value="pro">Pro Plan</option>
-              <option value="free">Free Plan</option>
-            </select>
-            <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" strokeWidth={2} />
-          </div>
+          <Select
+            value={subscriptionFilter}
+            onChange={handleFilterChange(setSubscriptionFilter)}
+            className="min-w-[140px]"
+            options={[
+              { value: '', label: 'Subscription' },
+              { value: 'pro', label: 'Pro Plan' },
+              { value: 'free', label: 'Free Plan' },
+            ]}
+          />
 
           <button 
             onClick={handleResetFilters}
@@ -307,14 +367,27 @@ const Users = () => {
           </button>
         </div>
         
-        <div className="flex items-center gap-4 rounded-2xl border border-[#01F27B]/20 bg-[#01F27B]/5 px-4 py-2 backdrop-blur-xl">
-          <span className="text-xs font-semibold text-[#01F27B]">BULK ACTIONS:</span>
+        <div className={`flex items-center gap-4 rounded-2xl border border-[#01F27B]/20 bg-[#01F27B]/5 px-4 py-2 backdrop-blur-xl transition-all duration-300 ${selectedUserIds.length > 0 ? 'opacity-100 scale-100' : 'opacity-40 scale-95 grayscale pointer-events-none'}`}>
+          <div className="flex flex-col">
+            <span className="text-[10px] font-black tracking-widest text-[#01F27B]">BULK ACTIONS</span>
+            <span className="text-[9px] font-bold text-white/40">{selectedUserIds.length} selected</span>
+          </div>
           <div className="flex items-center gap-2 border-l border-[#01F27B]/20 pl-4">
-            <button className="rounded-lg p-1.5 text-white/40 transition hover:bg-white/10 hover:text-white" title="Block selected">
-              <Ban className="h-4 w-4" strokeWidth={2} />
+            <button 
+              onClick={handleBulkSuspend}
+              disabled={selectedUserIds.length === 0}
+              className="rounded-lg p-1.5 text-[#01F27B] transition hover:bg-[#01F27B]/20" 
+              title="Suspend selected"
+            >
+              <Ban className="h-4 w-4" strokeWidth={2.5} />
             </button>
-            <button className="rounded-lg p-1.5 text-white/40 transition hover:bg-rose-500/20 hover:text-rose-400" title="Delete selected">
-              <Trash2 className="h-4 w-4" strokeWidth={2} />
+            <button 
+              onClick={handleBulkDelete}
+              disabled={selectedUserIds.length === 0}
+              className="rounded-lg p-1.5 text-rose-500 transition hover:bg-rose-500/20" 
+              title="Delete selected"
+            >
+              <Trash2 className="h-4 w-4" strokeWidth={2.5} />
             </button>
           </div>
         </div>
@@ -333,11 +406,13 @@ const Users = () => {
         onViewUser={setSelectedUser} 
         onDeleteUser={handleDeleteUser} 
         onSuspendUser={handleSuspendUser}
+        selectedUserIds={selectedUserIds}
+        onSelectionChange={setSelectedUserIds}
       />
 
       {/* Pagination */}
       {!isLoading && users.length > 0 && (
-        <div className="flex flex-wrap items-center justify-between gap-4 px-2">
+        <div className="relative z-30 flex flex-wrap items-center justify-between gap-4 px-2">
           <div className="text-sm text-white/50">
             Showing {(page - 1) * limit + 1}-{Math.min(page * limit, totalEntries || users.length)} of {totalEntries || users.length} entries
           </div>

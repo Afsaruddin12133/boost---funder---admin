@@ -71,7 +71,7 @@ const Navbar = ({ onOpenSidebar }) => {
             </button>
 
             <div
-              className={`absolute right-0 mt-3 w-44 overflow-hidden rounded-2xl border border-white/10 bg-black/80 shadow-xl shadow-black/60 transition-all  ${
+              className={`absolute right-0 mt-3 w-44 overflow-hidden rounded-2xl border border-white/10 bg-[#0c0c0c] shadow-xl shadow-black/60 transition-all z-50 backdrop-blur-xl ${
                 menuOpen
                   ? 'translate-y-0 opacity-100'
                   : 'pointer-events-none -translate-y-2 opacity-0'

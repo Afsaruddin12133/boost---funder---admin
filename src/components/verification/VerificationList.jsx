@@ -1,6 +1,6 @@
 import { ChevronDown, Eye, Filter, Search } from 'lucide-react'
 import { useMemo, useState } from 'react'
-import { fieldClass, glassCardClass, selectClass } from '../BoostFundrUI'
+import { fieldClass, glassCardClass, selectClass, Select } from '../BoostFundrUI'
 import { RoleBadge, StatusBadge } from './ui'
 
 const PAGE_SIZE = 6
@@ -39,7 +39,7 @@ const VerificationList = ({ verifications, onView }) => {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-4">
+      <div className="relative z-30 flex flex-wrap items-center justify-between gap-4">
         <div className="relative max-w-sm w-full">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" />
           <input
@@ -52,18 +52,16 @@ const VerificationList = ({ verifications, onView }) => {
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          <div className="relative">
-            <select
-              value={typeFilter}
-              onChange={(e) => handleChangeFilter(setTypeFilter)(e.target.value)}
-              className={`${selectClass} min-w-[130px] pr-10`}
-            >
-              <option value="all">All Types</option>
-              <option value="founder">Founder</option>
-              <option value="investor">Investor</option>
-            </select>
-            <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" strokeWidth={2} />
-          </div>
+          <Select
+            value={typeFilter}
+            onChange={handleChangeFilter(setTypeFilter)}
+            className="min-w-[130px]"
+            options={[
+              { value: 'all', label: 'All Types' },
+              { value: 'founder', label: 'Founder' },
+              { value: 'investor', label: 'Investor' },
+            ]}
+          />
 
           <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 p-1">
             <Filter className="ml-2 h-4 w-4 text-white/40" />

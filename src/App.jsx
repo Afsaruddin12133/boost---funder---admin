@@ -14,13 +14,9 @@ import UserPlans from "./pages/UserPlans";
 import Users from "./pages/Users";
 import Verification from "./pages/Verification";
 import VerificationReview from "./pages/VerificationReview";
-
-
+import DealDetail from "./pages/DealDetail";
 
 function App() {
-
-
-
   return (
     <>
       <Toaster
@@ -66,6 +62,14 @@ function App() {
           element={
             <AdminLayout>
               <Deals />
+            </AdminLayout>
+          }
+        />
+        <Route
+          path="/deals/:id"
+          element={
+            <AdminLayout>
+              <DealDetail />
             </AdminLayout>
           }
         />

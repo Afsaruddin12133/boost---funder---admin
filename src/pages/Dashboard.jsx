@@ -1,7 +1,11 @@
-import { ArrowRight, Briefcase, CircleDollarSign, UserRound, Users } from 'lucide-react'
+import { ArrowRight, Award, Briefcase, CheckCircle, CircleDollarSign, Rocket, Star, TrendingUp, UserRound, Users, XCircle } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import toast from 'react-hot-toast'
 import { PageHeader, SectionTitle, glassCardClass, outlineButtonClass, primaryButtonClass } from '../components/BoostFundrUI'
 import StatCard from '../components/StatCard'
 import Table from '../components/Table'
+import { getToken } from '../lib/utils'
+import apiClient from '../services/apiClient'
 
 const activityRows = [
   {
@@ -90,6 +94,33 @@ const quickActions = [
 ]
 
 const Dashboard = () => {
+  const [allUsers, setAllUsers] = useState([])
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const token = getToken()
+        if (!token) throw new Error('Missing auth token.')
+
+        const response = await apiClient.request(`/api/v1/users/all?limit=1000`, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+
+        const payload = response?.data?.items || response?.data?.users || response?.data || []
+        const usersArray = Array.isArray(payload) ? payload : []
+        setAllUsers(usersArray)
+      } catch (error) {
+        console.error('Failed to load users:', error)
+        toast.error('Failed to load user data')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    void fetchUsers()
+  }, [])
+
   return (
     <div className="space-y-8">
       <PageHeader
@@ -105,6 +136,124 @@ const Dashboard = () => {
           </button>,
         ]}
       />
+
+      {/* User Analytics - Professional Dashboard */}
+      <div className="space-y-6">
+        <SectionTitle title="User Analytics" />
+        
+        <div className="grid gap-6 lg:grid-cols-3">
+          {/* Platform Overview */}
+          <div className="group relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-[#01F27B]/10 via-[#0c0c0c] to-black/80 p-6 shadow-lg transition-all duration-300 hover:border-[#01F27B]/30 hover:shadow-[#01F27B]/10">
+            <div className="absolute inset-0 bg-gradient-to-br from-[#01F27B]/5 via-transparent to-black/40 opacity-0 transition-opacity duration-300 group-hover:opacity-100"></div>
+            <div className="absolute -inset-x-20 -top-20 h-[150px] w-full rotate-45 bg-gradient-to-b from-[#01F27B]/20 to-transparent opacity-0 blur-3xl transition-opacity duration-500 group-hover:opacity-100"></div>
+            <div className="relative z-10 space-y-6">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-bold uppercase tracking-wider text-white/70">Platform Overview</h3>
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#01F27B]/20 text-[#01F27B]">
+                  <Users className="h-5 w-5" strokeWidth={2} />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2 rounded-lg bg-white/5 p-4 backdrop-blur-sm">
+                  <span className="text-xs text-white/60">Total Users</span>
+                  <p className="text-2xl font-bold text-white">{allUsers.length || 0}</p>
+                </div>
+                <div className="space-y-2 rounded-lg bg-emerald-500/10 p-4 backdrop-blur-sm">
+                  <span className="text-xs text-emerald-300">Active</span>
+                  <p className="text-2xl font-bold text-emerald-400">{allUsers.filter(u => !u.isSuspended).length}</p>
+                </div>
+              </div>
+              <div className="rounded-lg bg-rose-500/10 p-4 backdrop-blur-sm">
+                <span className="text-xs text-rose-300">Suspended</span>
+                <p className="text-2xl font-bold text-rose-400">{allUsers.filter(u => u.isSuspended).length}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Subscription Distribution */}
+          <div className="group relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-purple-500/10 via-[#0c0c0c] to-black/80 p-6 shadow-lg transition-all duration-300 hover:border-purple-500/30 hover:shadow-purple-500/10">
+            <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 via-transparent to-black/40 opacity-0 transition-opacity duration-300 group-hover:opacity-100"></div>
+            <div className="absolute -inset-x-20 -top-20 h-[150px] w-full rotate-45 bg-gradient-to-b from-purple-500/20 to-transparent opacity-0 blur-3xl transition-opacity duration-500 group-hover:opacity-100"></div>
+            <div className="relative z-10 space-y-6">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-bold uppercase tracking-wider text-white/70">Subscription Plans</h3>
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-500/20 text-purple-400">
+                  <Award className="h-5 w-5" strokeWidth={2} />
+                </div>
+              </div>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between rounded-lg bg-blue-500/10 p-3 backdrop-blur-sm transition-all duration-300 hover:bg-blue-500/20">
+                  <div className="flex items-center gap-2">
+                    <TrendingUp className="h-4 w-4 text-blue-400" strokeWidth={2} />
+                    <span className="text-sm text-white/80">Free Plan</span>
+                  </div>
+                  <p className="text-lg font-bold text-blue-400">{allUsers.filter(u => u.subscription?.plan === 'free' || !u.subscription?.plan).length}</p>
+                </div>
+                <div className="flex items-center justify-between rounded-lg bg-yellow-500/10 p-3 backdrop-blur-sm transition-all duration-300 hover:bg-yellow-500/20">
+                  <div className="flex items-center gap-2">
+                    <Award className="h-4 w-4 text-yellow-400" strokeWidth={2} />
+                    <span className="text-sm text-white/80">Pro Plan</span>
+                  </div>
+                  <p className="text-lg font-bold text-yellow-400">{allUsers.filter(u => u.subscription?.plan === 'pro').length}</p>
+                </div>
+                <div className="flex items-center justify-between rounded-lg bg-[#01F27B]/10 p-3 backdrop-blur-sm transition-all duration-300 hover:bg-[#01F27B]/20">
+                  <div className="flex items-center gap-2">
+                    <Star className="h-4 w-4 text-[#01F27B]" strokeWidth={2} />
+                    <span className="text-sm text-white/80">Elite Plan</span>
+                  </div>
+                  <p className="text-lg font-bold text-[#01F27B]">{allUsers.filter(u => u.subscription?.plan === 'elite').length}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* User Roles & Verification */}
+          <div className="group relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-cyan-500/10 via-[#0c0c0c] to-black/80 p-6 shadow-lg transition-all duration-300 hover:border-cyan-500/30 hover:shadow-cyan-500/10">
+            <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 via-transparent to-black/40 opacity-0 transition-opacity duration-300 group-hover:opacity-100"></div>
+            <div className="absolute -inset-x-20 -top-20 h-[150px] w-full rotate-45 bg-gradient-to-b from-cyan-500/20 to-transparent opacity-0 blur-3xl transition-opacity duration-500 group-hover:opacity-100"></div>
+            <div className="relative z-10 space-y-6">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-bold uppercase tracking-wider text-white/70">Users & Status</h3>
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-cyan-500/20 text-cyan-400">
+                  <CheckCircle className="h-5 w-5" strokeWidth={2} />
+                </div>
+              </div>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between rounded-lg bg-cyan-500/10 p-3 backdrop-blur-sm transition-all duration-300 hover:bg-cyan-500/20">
+                  <div className="flex items-center gap-2">
+                    <Briefcase className="h-4 w-4 text-cyan-400" strokeWidth={2} />
+                    <span className="text-sm text-white/80">Investors</span>
+                  </div>
+                  <p className="text-lg font-bold text-cyan-400">{allUsers.filter(u => u.role === 'investor').length}</p>
+                </div>
+                <div className="flex items-center justify-between rounded-lg bg-orange-500/10 p-3 backdrop-blur-sm transition-all duration-300 hover:bg-orange-500/20">
+                  <div className="flex items-center gap-2">
+                    <Rocket className="h-4 w-4 text-orange-400" strokeWidth={2} />
+                    <span className="text-sm text-white/80">Founders</span>
+                  </div>
+                  <p className="text-lg font-bold text-orange-400">{allUsers.filter(u => u.role === 'founder').length}</p>
+                </div>
+                <div className="border-t border-white/10 pt-3 mt-3">
+                  <div className="flex items-center justify-between rounded-lg bg-emerald-500/10 p-3 backdrop-blur-sm transition-all duration-300 hover:bg-emerald-500/20">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="h-4 w-4 text-emerald-400" strokeWidth={2} />
+                      <span className="text-sm text-white/80">Verified</span>
+                    </div>
+                    <p className="text-lg font-bold text-emerald-400">{allUsers.filter(u => u.isVerified).length}</p>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between rounded-lg bg-rose-500/10 p-3 backdrop-blur-sm transition-all duration-300 hover:bg-rose-500/20">
+                  <div className="flex items-center gap-2">
+                    <XCircle className="h-4 w-4 text-rose-400" strokeWidth={2} />
+                    <span className="text-sm text-white/80">Unverified</span>
+                  </div>
+                  <p className="text-lg font-bold text-rose-400">{allUsers.filter(u => !u.isVerified).length}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <section className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
         {stats.map((stat) => (
@@ -142,6 +291,7 @@ const Dashboard = () => {
       </section>
     </div>
   )
+
 }
 
 const stats = [
