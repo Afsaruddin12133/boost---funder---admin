@@ -1,7 +1,22 @@
-import { Ban, ChevronLeft, ChevronRight, Download, Trash2 } from 'lucide-react'
+import { 
+  Ban, 
+  ChevronLeft, 
+  ChevronRight, 
+  Download, 
+  Trash2,
+  Users as UsersIcon,
+  CheckCircle,
+  TrendingUp,
+  Star
+} from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import toast from 'react-hot-toast'
-import { PageHeader, Select, glassCardClass, outlineButtonClass } from '../components/BoostFundrUI'
+import { 
+  PageHeader, 
+  Select, 
+  glassCardClass, 
+  outlineButtonClass 
+} from '../components/BoostFundrUI'
 import UserDetailsModal from '../components/users/UserDetailsModal'
 import UserTable from '../components/users/UserTable'
 import { getToken } from '../lib/utils'
@@ -121,6 +136,25 @@ const Users = () => {
 
     return filtered
   }, [allUsers, roleFilter, statusFilter, suspendFilter, subscriptionFilter])
+
+  const userStats = useMemo(() => {
+    const total = allUsers.length;
+    const verified = allUsers.filter(u => u.isVerified).length;
+    const premium = allUsers.filter(u => u.subscription?.plan !== 'free' && u.subscription?.plan).length;
+    const active = allUsers.filter(u => {
+      if (!u.lastLogin) return false;
+      const lastLogin = new Date(u.lastLogin).getTime();
+      const fiveDaysAgo = Date.now() - (5 * 24 * 60 * 60 * 1000);
+      return lastLogin > fiveDaysAgo;
+    }).length;
+
+    return [
+      { title: 'Total Members', value: total, icon: UsersIcon, color: 'text-blue-400', sub: 'All registered accounts' },
+      { title: 'Verified Profiles', value: verified, icon: CheckCircle, color: 'text-[#01F27B]', sub: `${Math.round((verified/total)*100 || 0)}% of total base` },
+      { title: 'Active (5d)', value: active, icon: TrendingUp, color: 'text-purple-400', sub: 'Last login within 5 days' },
+      { title: 'Premium Tiers', value: premium, icon: Star, color: 'text-orange-400', sub: 'Pro & Elite subscribers' },
+    ];
+  }, [allUsers]);
 
   const totalEntries = filteredUsers.length
   const totalPages = Math.max(1, Math.ceil(totalEntries / limit))
@@ -298,7 +332,7 @@ const Users = () => {
   }, [])
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
       <PageHeader
         eyebrow="User Management"
         title="Users"
@@ -311,13 +345,42 @@ const Users = () => {
         ]}
       />
 
-      {/* User Table */}
-      <div className={`${glassCardClass} relative z-30 flex flex-wrap items-center justify-between gap-4 p-4`}>
-        <div className="flex items-center gap-3">
+      {/* Summary Cards - At a Glance */}
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 animate-slide-up">
+        {userStats.map((stat, idx) => (
+          <div 
+            key={stat.title} 
+            className={`${glassCardClass} p-5 group transition-all hover:bg-white/5 border-white/5 hover:border-white/10`}
+            style={{ animationDelay: `${idx * 50}ms` }}
+          >
+            <div className="flex items-start justify-between">
+              <div className="space-y-3">
+                <p className="text-[10px] font-black uppercase tracking-[0.15em] text-white/40">{stat.title}</p>
+                <div className="flex items-baseline gap-2">
+                   <h4 className="text-3xl font-bold text-white tracking-tight">
+                     {isLoading ? '...' : stat.value.toLocaleString()}
+                   </h4>
+                </div>
+                <p className="text-[10px] font-bold text-white/20 uppercase tracking-widest">{stat.sub}</p>
+              </div>
+              <div className={`flex h-10 w-10 items-center justify-center rounded-xl bg-white/5 ${stat.color} border border-white/5 transition-transform group-hover:scale-110`}>
+                <stat.icon className="h-5 w-5" />
+              </div>
+            </div>
+            <div className="mt-4 h-1 w-full bg-white/5 rounded-full overflow-hidden">
+               <div className={`h-full ${stat.color.replace('text-', 'bg-')} opacity-40`} style={{ width: '100%' }} />
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* User Table Filters */}
+      <div className={`${glassCardClass} animate-slide-up relative z-30 flex flex-col lg:flex-row lg:items-center justify-between gap-6 p-4 lg:p-6`} style={{ animationDelay: '100ms' }}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:flex xl:items-center gap-4 w-full lg:w-auto">
           <Select
             value={roleFilter}
             onChange={handleFilterChange(setRoleFilter)}
-            className="min-w-[140px]"
+            className="w-full xl:min-w-[140px]"
             options={[
               { value: '', label: 'All Roles' },
               { value: 'founder', label: 'Founder' },
@@ -329,7 +392,7 @@ const Users = () => {
           <Select
             value={statusFilter}
             onChange={handleFilterChange(setStatusFilter)}
-            className="min-w-[140px]"
+            className="w-full xl:min-w-[140px]"
             options={[
               { value: '', label: 'Status' },
               { value: 'true', label: 'Verified' },
@@ -340,7 +403,7 @@ const Users = () => {
           <Select
             value={suspendFilter}
             onChange={handleFilterChange(setSuspendFilter)}
-            className="min-w-[140px]"
+            className="w-full xl:min-w-[140px]"
             options={[
               { value: '', label: 'Suspension' },
               { value: 'true', label: 'Suspended' },
@@ -351,7 +414,7 @@ const Users = () => {
           <Select
             value={subscriptionFilter}
             onChange={handleFilterChange(setSubscriptionFilter)}
-            className="min-w-[140px]"
+            className="w-full xl:min-w-[140px]"
             options={[
               { value: '', label: 'Subscription' },
               { value: 'pro', label: 'Pro Plan' },
@@ -361,22 +424,22 @@ const Users = () => {
 
           <button 
             onClick={handleResetFilters}
-            className={outlineButtonClass}
+            className={`${outlineButtonClass} w-full xl:w-auto`}
           >
             Reset
           </button>
         </div>
         
-        <div className={`flex items-center gap-4 rounded-2xl border border-[#01F27B]/20 bg-[#01F27B]/5 px-4 py-2 backdrop-blur-xl transition-all duration-300 ${selectedUserIds.length > 0 ? 'opacity-100 scale-100' : 'opacity-40 scale-95 grayscale pointer-events-none'}`}>
+        <div className={`flex items-center justify-between lg:justify-start gap-4 rounded-2xl border border-[#01F27B]/20 bg-[#01F27B]/5 px-4 py-3 backdrop-blur-xl transition-all duration-300 w-full lg:w-auto ${selectedUserIds.length > 0 ? 'opacity-100 scale-100' : 'opacity-40 scale-95 grayscale pointer-events-none'}`}>
           <div className="flex flex-col">
             <span className="text-[10px] font-black tracking-widest text-[#01F27B]">BULK ACTIONS</span>
             <span className="text-[9px] font-bold text-white/40">{selectedUserIds.length} selected</span>
           </div>
-          <div className="flex items-center gap-2 border-l border-[#01F27B]/20 pl-4">
+          <div className="flex items-center gap-3 border-l border-[#01F27B]/20 pl-4">
             <button 
               onClick={handleBulkSuspend}
               disabled={selectedUserIds.length === 0}
-              className="rounded-lg p-1.5 text-[#01F27B] transition hover:bg-[#01F27B]/20" 
+              className="rounded-xl p-2 text-[#01F27B] transition hover:bg-[#01F27B]/20" 
               title="Suspend selected"
             >
               <Ban className="h-4 w-4" strokeWidth={2.5} />
@@ -384,7 +447,7 @@ const Users = () => {
             <button 
               onClick={handleBulkDelete}
               disabled={selectedUserIds.length === 0}
-              className="rounded-lg p-1.5 text-rose-500 transition hover:bg-rose-500/20" 
+              className="rounded-xl p-2 text-rose-500 transition hover:bg-rose-500/20" 
               title="Delete selected"
             >
               <Trash2 className="h-4 w-4" strokeWidth={2.5} />
@@ -400,15 +463,17 @@ const Users = () => {
         </div>
       )}
 
-      <UserTable 
-        users={users} 
-        isLoading={isLoading} 
-        onViewUser={setSelectedUser} 
-        onDeleteUser={handleDeleteUser} 
-        onSuspendUser={handleSuspendUser}
-        selectedUserIds={selectedUserIds}
-        onSelectionChange={setSelectedUserIds}
-      />
+      <div className="animate-slide-up" style={{ animationDelay: '200ms' }}>
+        <UserTable 
+          users={users} 
+          isLoading={isLoading} 
+          onViewUser={setSelectedUser} 
+          onDeleteUser={handleDeleteUser} 
+          onSuspendUser={handleSuspendUser}
+          selectedUserIds={selectedUserIds}
+          onSelectionChange={setSelectedUserIds}
+        />
+      </div>
 
       {/* Pagination */}
       {!isLoading && users.length > 0 && (

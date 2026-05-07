@@ -80,8 +80,8 @@ const Table = ({ columns, data, initialSort }) => {
           </tr>
         </thead>
         <tbody className="divide-y divide-white/10">
-          {sortedData.map((row) => (
-            <tr key={row.id} className="text-white/80">
+          {sortedData.map((row, index) => (
+            <tr key={row._id || row.id || index} className="text-white/80">
               {columns.map((column) => (
                 <td key={column.key} className="px-4 py-4">
                   {column.render

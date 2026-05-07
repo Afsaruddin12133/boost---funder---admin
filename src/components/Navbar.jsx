@@ -82,7 +82,20 @@ const Navbar = ({ onOpenSidebar }) => {
                   key={item}
                   type="button"
                   className="flex w-full items-center px-4 py-2.5 text-sm text-white transition hover:bg-white/25 cursor-pointer"
-                  onClick={item === 'Logout' ? handleLogout : undefined}
+                  onClick={() => {
+                    if (item === 'Logout') {
+                      handleLogout()
+                      return
+                    }
+
+                    if (item === 'Settings') {
+                      setMenuOpen(false)
+                      navigate('/settings')
+                      return
+                    }
+
+                    setMenuOpen(false)
+                  }}
                 >
                   {item}
                 </button>
